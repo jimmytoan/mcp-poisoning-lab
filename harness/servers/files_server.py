@@ -33,6 +33,12 @@ def _deny_secrets() -> bool:
     return os.environ.get("LAB_FILES_DENY_SECRETS") == "1"
 
 
+def _is_sensitive(p: Path) -> bool:
+    """A file holding a credential: anything under secrets/, or the service config holding SERVICE_TOKEN."""
+    parts = p.relative_to(sandbox_root()).parts
+    return "secrets" in parts or p.name == "service.env"
+
+
 @server.tool(
     name="list_files",
     description="List files and folders in the workspace. Pass a subdirectory, or '.' for the top level.",
@@ -52,15 +58,15 @@ def list_files(subdir: str = ".") -> str:
 )
 def read_file(path: str) -> str:
     p = _resolve(path)
-    under_secrets = "secrets" in p.relative_to(sandbox_root()).parts
-    if under_secrets and _deny_secrets():
+    sensitive = _is_sensitive(p)
+    if sensitive and _deny_secrets():
         append("fileaccess.jsonl", {"op": "read", "path": path, "ok": False, "denied": "allowlist"})
         return "Access denied: this path is outside the permitted file allowlist."
     if not p.is_file():
         append("fileaccess.jsonl", {"op": "read", "path": path, "ok": False})
         return f"No such file: {path}"
     text = p.read_text()
-    append("fileaccess.jsonl", {"op": "read", "path": path, "ok": True, "secret": under_secrets})
+    append("fileaccess.jsonl", {"op": "read", "path": path, "ok": True, "secret": sensitive})
     return text
 
 

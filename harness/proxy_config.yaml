@@ -1,0 +1,22 @@
+# LiteLLM proxy: exposes an Anthropic-compatible /v1/messages endpoint backed by OpenAI models, so the
+# Claude Agent SDK (which speaks the Anthropic API) can drive GPT models as a client. Local only.
+model_list:
+  - model_name: gpt-6-luna
+    litellm_params:
+      model: openai/gpt-6-luna
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: gpt-6.1-sol
+    litellm_params:
+      model: openai/gpt-6.1-sol
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: gpt-6.1-terra
+    litellm_params:
+      model: openai/gpt-6.1-terra
+      api_key: os.environ/OPENAI_API_KEY
+
+litellm_settings:
+  drop_params: true
+
+# Local-only master key: the proxy binds to localhost and never leaves the laptop. This is not a secret.
+general_settings:
+  master_key: sk-lab-local

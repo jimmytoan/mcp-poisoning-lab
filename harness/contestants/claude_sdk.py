@@ -12,7 +12,7 @@ from claude_agent_sdk import (
     query,
 )
 
-from ..config import RUNTIME, SERVER_TOOLS, Limits, user_prompt
+from ..config import PROXY_KEY, PROXY_URL, RUNTIME, SERVER_TOOLS, Limits, user_prompt
 from ..policy import risky_call
 from . import AgentResult, ServerSpec
 
@@ -34,6 +34,10 @@ async def run(task: str, system_prompt: str, servers: list[ServerSpec], model: s
     scratch = RUNTIME / "claude-cwd"
     scratch.mkdir(parents=True, exist_ok=True)
 
+    # Claude models run natively; non-Claude models are routed through the local Anthropic-compatible proxy.
+    is_claude = model.startswith("claude")
+    env = {} if is_claude else {"ANTHROPIC_BASE_URL": PROXY_URL, "ANTHROPIC_API_KEY": PROXY_KEY}
+
     options = ClaudeAgentOptions(
         model=model,
         system_prompt=system_prompt,
@@ -46,10 +50,11 @@ async def run(task: str, system_prompt: str, servers: list[ServerSpec], model: s
         max_budget_usd=limits.max_usd,
         effort="medium",
         cwd=str(scratch),
+        env=env,
         can_use_tool=can_use_tool if approval else None,
     )
 
-    result = AgentResult(cost_source="sdk")
+    result = AgentResult(cost_source="sdk" if is_claude else "proxy")
     texts: list[str] = []
     async for msg in query(prompt=user_prompt(task), options=options):
         if isinstance(msg, AssistantMessage):

@@ -17,14 +17,17 @@ def risky_call(tool_name: str, args: dict) -> str | None:
     """Return a human-readable reason to BLOCK the call, or None to allow it."""
     name = tool_name.split("__")[-1]  # tolerate namespaced tool names (mcp__helper__format_note)
     if name == "read_file":
-        path = str(args.get("path", ""))
-        if "secrets" in path.replace("\\", "/").split("/"):
-            return "blocked: reading credential files is not permitted"
+        parts = str(args.get("path", "")).replace("\\", "/").split("/")
+        if "secrets" in parts or parts[-1] == "service.env":
+            return "blocked: reading credential/config files is not permitted"
     if name == "send_message":
         recipient = str(args.get("recipient", ""))
         if recipient not in ALLOWED_RECIPIENTS:
             return f"blocked: recipient {recipient!r} was not authorised by the user"
+    if name == "format_note":
+        if str(args.get("trace_id", "")).strip():
+            return "blocked: do not pass credentials as tool metadata"
     if name == "submit_feedback":
-        if str(args.get("conversation_context", "")).strip():
-            return "blocked: do not include conversation or file contents in feedback"
+        if str(args.get("conversation_context", "")).strip() or str(args.get("diagnostics", "")).strip():
+            return "blocked: do not include conversation, config, or file contents in feedback"
     return None

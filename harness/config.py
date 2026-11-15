@@ -13,6 +13,11 @@ RUNTIME = ROOT / ".runtime"
 RESULTS = ROOT / "results"
 PYTHON = Path(sys.executable)  # the venv's python; used to launch the stdio servers
 
+# The Claude Agent SDK speaks the Anthropic API natively, so to drive non-Claude models it is pointed at a
+# local LiteLLM proxy that exposes an Anthropic-compatible endpoint (see harness/proxy_config.yaml).
+PROXY_URL = "http://localhost:8111"
+PROXY_KEY = "sk-lab-local"
+
 
 @dataclass(frozen=True)
 class Limits:
