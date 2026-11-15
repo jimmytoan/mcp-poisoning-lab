@@ -43,8 +43,10 @@ async def run(task: str, system_prompt: str, servers: list[ServerSpec], model: s
         system_prompt=system_prompt,
         tools=[],                       # no built-in Bash/Read/Edit: only the MCP servers under test
         mcp_servers=mcp_servers,
-        allowed_tools=allowed,
-        permission_mode="dontAsk",
+        # With the approval defence, route every tool call through can_use_tool: pre-allowing tools (or
+        # permission_mode="dontAsk") skips the callback, so leave allowed_tools empty and use "default".
+        allowed_tools=[] if approval else allowed,
+        permission_mode="default" if approval else "dontAsk",
         setting_sources=[],
         max_turns=limits.max_model_calls,
         max_budget_usd=limits.max_usd,
