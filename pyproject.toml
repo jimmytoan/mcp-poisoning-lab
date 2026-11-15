@@ -1,0 +1,21 @@
+[project]
+name = "mcp-poisoning-lab"
+version = "0.1.0"
+description = "A deliberately malicious MCP server, pointed at three agent SDKs, to measure how often prompt-injection attacks succeed and which defences stop them. Local and harmless by construction."
+requires-python = ">=3.12,<3.14"
+dependencies = [
+  "claude-agent-sdk==0.2.181",
+  "openai-agents[litellm]==0.24.0",
+  "google-adk==2.14.1",
+  "litellm==1.109.1",
+  "mcp>=1.2",
+  "anthropic>=1.0",
+  "pyyaml>=6",
+  "python-dotenv>=1",
+]
+
+[tool.uv]
+package = false
+
+[dependency-groups]
+dev = ["pytest>=8"]
